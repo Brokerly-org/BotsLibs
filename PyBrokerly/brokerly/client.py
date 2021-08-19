@@ -35,7 +35,7 @@ class Bot:
             chats = update['chats']
             for chat in chats:
                 for message in chat['messages']:
-                    message = Message(message)
+                    message = Message({"message": message})
                     
                     self.handler(self, message)
             time.sleep(interval)            
