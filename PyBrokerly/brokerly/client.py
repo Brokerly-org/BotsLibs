@@ -44,5 +44,5 @@ class Bot:
             for chat in chats:
                 for message in chat['messages']:
                     message = Message({"message": message})
-                    self.executor.submit(self.handler, (message,))
+                    self.executor.submit(self.handler, (self, message,))
             time.sleep(interval)            
