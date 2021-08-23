@@ -31,13 +31,7 @@ class Bot:
         response = requests.post(
             f"{self.server_url}/bot/push",
             params={"token": self.token, "chat_id": chat_id},
-            data={
-              "text": message,
-              "widget": {
-                "type": "non",
-                "args": {}
-              }
-            },
+            json={"text": message, "widget": {"type": "non", "args": {}}},
         )
         print(response.text)
 
