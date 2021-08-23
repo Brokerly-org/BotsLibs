@@ -30,7 +30,14 @@ class Bot:
     def send_message(self, chat_id, message) -> None:
         requests.post(
             f"{self.server_url}/bot/push",
-            params={"token": self.token, "chat_id": chat_id, "message": message}
+            params={"token": self.token, "chat_id": chat_id},
+            data={
+              "text": message,
+              "widget": {
+                "type": "non",
+                "args": {}
+              }
+            },
         )
 
     def _run_handler(self, updates):
