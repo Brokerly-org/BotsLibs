@@ -28,7 +28,7 @@ class Bot:
         self.executor = ThreadPoolExecutor(max_workers=workers)
 
     def send_message(self, chat_id, message) -> None:
-        requests.post(
+        response = requests.post(
             f"{self.server_url}/bot/push",
             params={"token": self.token, "chat_id": chat_id},
             data={
@@ -39,6 +39,7 @@ class Bot:
               }
             },
         )
+        print(response.text)
 
     def _run_handler(self, updates):
         try:
