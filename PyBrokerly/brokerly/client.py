@@ -33,7 +33,6 @@ class Bot:
             params={"token": self.token, "chat_id": chat_id},
             json={"text": message, "widget": {"type": "non", "args": {}}},
         )
-        print(response.text)
 
     def _run_handler(self, updates):
         try:
