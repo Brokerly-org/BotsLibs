@@ -7,5 +7,5 @@ def handler(context, update):
     print(f'New message from chat {chat_id}: {text}')
     context.send_message(chat_id, text)
 
-bot = Bot(token='nblNTu1zMWTQrte0p5KJ', message_handler=handler, host='127.0.0.1', port=80)
+bot = Bot(token='9IomIyrWli5FCtNarIhr', message_handler=handler, host='dashboard.brokerly.tk')
 bot.start(interval=1)

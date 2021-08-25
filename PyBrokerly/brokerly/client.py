@@ -1,6 +1,10 @@
 import requests
 import time
+import json as json_lib
 from concurrent.futures.thread import ThreadPoolExecutor
+
+
+from .connection_handler import Connection
 
 
 class Message:
@@ -18,12 +22,15 @@ class Message:
 
 
 class Bot:
-    def __init__(self, token: str, message_handler, host: str, port: int = None, workers: int = 4) -> None:
+    def __init__(self, token: str, message_handler, host: str, port: int = None, workers: int = 4, secure: bool = True) -> None:
         self.token = token
+        self.schema = "https://" if secure else "http://"
         if port is not None:
-            self.server_url = f'http://{host}:{port}'
+            self.server_url = f'{self.schema}{host}:{port}'
         else:
-            self.server_url = f'http://{host}'
+            self.server_url = f'{self.schema}{host}'
+        self.connection = Connection(self.server_url[self.server_url.find("//")+2:], secure, self.pares_update, self.token)
+        self.connection.start()
         self.handler = message_handler
         self.executor = ThreadPoolExecutor(max_workers=workers)
 
@@ -44,12 +51,27 @@ class Bot:
         response = requests.get(f"{self.server_url}/bot/pull", params={"token": self.token})
         return response.json()
 
+    def pares_update(self, update):
+        updates = json_lib.loads(update)
+        for update in updates:
+            self.execute_update(update)
+
+    def execute_update(self, update):
+        for message in update['messages']:
+            message = Message({"message": message})
+            self.executor.submit(self._run_handler, message)
+
     def start(self, interval=5):
+        self.idle()
+        # while True:
+        #     update = self._get_updates()
+        #     self.execute_update(update)
+        #     time.sleep(interval)
+
+    def idle(self):
         while True:
-            update = self._get_updates()
-            chats = update['chats']
-            for chat in chats:
-                for message in chat['messages']:
-                    message = Message({"message": message})
-                    self.executor.submit(self._run_handler, message)
-            time.sleep(interval)            
+            try:
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                break
+
