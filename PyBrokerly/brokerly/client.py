@@ -4,6 +4,7 @@ import json as json_lib
 from concurrent.futures.thread import ThreadPoolExecutor
 
 
+from .widgets import Widget
 from .connection_handler import Connection
 
 
@@ -34,11 +35,13 @@ class Bot:
         self.handler = message_handler
         self.executor = ThreadPoolExecutor(max_workers=workers)
 
-    def send_message(self, chat_id, message) -> None:
+    def send_message(self, chat_id, message, widget: Widget = None) -> None:
+        empty_widget = {"type": "non", "args": {}}
+
         response = requests.post(
             f"{self.server_url}/bot/push",
             params={"token": self.token, "chat_id": chat_id},
-            json={"text": message, "widget": {"type": "non", "args": {}}},
+            json={"text": message, "widget": widget.to_widget() if widget is not None else empty_widget},
         )
 
     def _run_handler(self, updates):
@@ -63,10 +66,6 @@ class Bot:
 
     def start(self, interval=5):
         self.idle()
-        # while True:
-        #     update = self._get_updates()
-        #     self.execute_update(update)
-        #     time.sleep(interval)
 
     def idle(self):
         while True:

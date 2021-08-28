@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='PyBrokerly',
     version='1.0.0',
@@ -6,7 +6,7 @@ setup(name='PyBrokerly',
     url='',
     author='Brokerly',
     author_email='support@brokerly.com',
-    packages=['brokerly'],
+    packages=find_packages(),
     install_requires=['requests'],
       python_requires='>=3.5',
       classifiers=[
