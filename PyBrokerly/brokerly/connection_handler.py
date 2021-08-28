@@ -17,11 +17,13 @@ class Connection:
         self.ws = self.retry_connection()
         self.listener = Thread(target=self.receiver)
 
+        self._stop = False
+
     def start(self):
         self.listener.start()
+        print(self.connection_url)
 
     def start_connection(self):
-        print(self.connection_url)
         return create_connection(self.connection_url)
 
     def retry_connection(self):
@@ -39,11 +41,18 @@ class Connection:
             self.ws = self.retry_connection()
 
     def receiver(self):
-        while True:
+        while not self._stop:
             try:
                 data = self.ws.recv()
             except Exception:
                 self.ws = self.retry_connection()
                 continue
             else:
-                self.on_update(data)
+                if not self._stop:
+                    self.on_update(data)
+
+    def stop(self):
+        print("Stopping...")
+        self._stop = True
+        self.ws.close()
+

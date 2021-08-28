@@ -4,7 +4,7 @@ import json as json_lib
 from concurrent.futures.thread import ThreadPoolExecutor
 
 
-from .widgets import Widget
+from .widgets.widget import Widget
 from .connection_handler import Connection
 
 
@@ -23,7 +23,7 @@ class Message:
 
 
 class Bot:
-    def __init__(self, token: str, message_handler, host: str, port: int = None, workers: int = 4, secure: bool = True) -> None:
+    def __init__(self, token: str, message_handler, host: str, port: int = None, workers: int = 4, secure: bool = True):
         self.token = token
         self.schema = "https://" if secure else "http://"
         if port is not None:
@@ -73,4 +73,4 @@ class Bot:
                 time.sleep(0.5)
             except KeyboardInterrupt:
                 break
-
+        self.connection.stop()
