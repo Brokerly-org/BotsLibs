@@ -31,7 +31,7 @@ class Connection:
             try:
                 ws = self.start_connection()
                 return ws
-            except ConnectionError:
+            except Exception as EX:
                 sleep(RETRY_CONNECTION_INTERVAL)
 
     def send(self, data: str):
