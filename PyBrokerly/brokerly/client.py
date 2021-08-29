@@ -30,7 +30,11 @@ class Bot:
             self.server_url = f'{self.schema}{host}:{port}'
         else:
             self.server_url = f'{self.schema}{host}'
-        self.connection = Connection(self.server_url[self.server_url.find("//")+2:], secure, self.pares_update, self.token)
+        try:
+            self.connection = Connection(self.server_url[self.server_url.find("//")+2:], secure, self.pares_update, self.token)
+        except FileNotFoundError as err:
+            raise Exception('Do you work with non https server? try initialize Bot with secure = False')
+
         self.connection.start()
         self.handler = message_handler
         self.executor = ThreadPoolExecutor(max_workers=workers)
