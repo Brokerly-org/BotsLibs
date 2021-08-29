@@ -55,4 +55,3 @@ class Connection:
         print("Stopping...")
         self._stop = True
         self.ws.close()
-
