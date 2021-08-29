@@ -17,17 +17,25 @@ class Message:
 
     def __setitem__(self, key, value):
         self.data[key] = value
-    
+
     def __getitem__(self, key):
         return self.data[key]
 
 
 class Bot:
-    def __init__(self, token: str, message_handler, host: str, port: int = None, workers: int = 4, secure: bool = True):
+    def __init__(
+        self,
+        token: str,
+        message_handler,
+        host: str,
+        port: int = None,
+        workers: int = 4,
+        secure: bool = True,
+    ):
         self.token = token
         self.schema = "https://" if secure else "http://"
         if port is not None:
-            self.server_url = f'{self.schema}{host}:{port}'
+            self.server_url = f"{self.schema}{host}:{port}"
         else:
             self.server_url = f'{self.schema}{host}'
         try:
@@ -45,7 +53,10 @@ class Bot:
         response = requests.post(
             f"{self.server_url}/bot/push",
             params={"token": self.token, "chat_id": chat_id},
-            json={"text": message, "widget": widget.to_widget() if widget is not None else empty_widget},
+            json={
+                "text": message,
+                "widget": widget.to_widget() if widget is not None else empty_widget,
+            },
         )
 
     def _run_handler(self, updates):
@@ -55,7 +66,9 @@ class Bot:
             print(EX)
 
     def _get_updates(self):
-        response = requests.get(f"{self.server_url}/bot/pull", params={"token": self.token})
+        response = requests.get(
+            f"{self.server_url}/bot/pull", params={"token": self.token}
+        )
         return response.json()
 
     def pares_update(self, update):
@@ -64,7 +77,7 @@ class Bot:
             self.execute_update(update)
 
     def execute_update(self, update):
-        for message in update['messages']:
+        for message in update["messages"]:
             message = Message({"message": message})
             self.executor.submit(self._run_handler, message)
 

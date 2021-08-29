@@ -14,5 +14,5 @@ class TimePicker(Widget):
             "args": {
                 "initial_hour": self.initial_hour,
                 "initial_minute": self.initial_minute,
-            }
+            },
         }

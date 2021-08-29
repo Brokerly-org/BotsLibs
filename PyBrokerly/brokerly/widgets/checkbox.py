@@ -8,7 +8,4 @@ class Checkbox(Widget):
         self.initial = initial_status
 
     def to_widget(self):
-        return {
-            "type": self.ty,
-            "args": {"initial": self.initial}
-        }
+        return {"type": self.ty, "args": {"initial": self.initial}}
