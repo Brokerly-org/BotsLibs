@@ -1,79 +1,99 @@
-/*******************************************************************
- *  this is a basic example how to program a Telegram Bot          *
- *  using TelegramBOT library on ESP8266                           *
- *                                                                 *
- *  Open a conversation with the bot, it will echo your messages   *
- *  https://web.telegram.org/#/im?p=@EchoBot_bot                   *                                                                 
- *                                                                 *
- *  written by Giacarlo Bacchio                                    *
- *******************************************************************/
-
-
+#include <ArduinoWebsockets.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
-#include <ESP8266TelegramBOT.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 
 
-// Initialize Wifi connection to the router
-char ssid[] = "xxxxxxxxxxxxxxxxxxxxxxxx";              // your network SSID (name)
-char password[] = "yyyyyyyyy";                              // your network key
+const char* ssid = "ssid"; //Enter SSID
+const char* password = "pass"; //Enter Password
+const char* websockets_server = "wss://yakov.gq/bot_connect?token=3c7-5fn9izWUgXvyMLJO"; //server adress and port
+const char* TOKEN = "3c7-5fn9izWUgXvyMLJO";
+const char* host = "yakov.gq";
+const int httpsPort = 443;
+
+//WiFiClientSecure wifiClientSecure; // use WiFiClient for non https
+
+//SHA1 finger print of certificate use web browser to view and copy
+// Steps to get SHA finger print ehttps://circuits4you.com/2019/02/08/esp8266-nodemcu-https-secured-post-request/ 
+//const char fingerprint[] PROGMEM = "10:7C:39:11:1A:D8:8D:E7:54:E5:9D:72:C1:54:38:84:4A:4F:99:24";
+using namespace websockets;
+
+WebsocketsClient client;
 
 
-
-// Initialize Telegram BOT
-#define BOTtoken "77330665:AAEIHv4RJxPnygoKD8nZqLnlpmd4hq7iR7s"  //token of TestBOT
-#define BOTname "EchoBot"
-#define BOTusername "EchoBot_bot"
-TelegramBOT bot(BOTtoken, BOTname, BOTusername);
-
-int Bot_mtbs = 1000; //mean time between scan messages
-long Bot_lasttime;   //last time messages' scan has been done
-
-
-/********************************************
- * EchoMessages - function to Echo messages *
- ********************************************/
-void Bot_EchoMessages() {
-
-  for (int i = 1; i < bot.message[0][0].toInt() + 1; i++)      {
-    bot.sendMessage(bot.message[i][4], bot.message[i][5], "");
-  }
-  bot.message[0][0] = "";   // All messages have been replied - reset new messages
+void onMessageCallback(WebsocketsMessage message) {
+    Serial.print("Got Message: ");
+    Serial.println(message.data());
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, message.data());
+    JsonArray jsonUpdate = doc.as<JsonArray>();
+    for(JsonVariant u : jsonUpdate) {
+      JsonObject newUpdate = u.as<JsonObject>();
+      JsonArray messages = newUpdate["messages"].as<JsonArray>();
+      for(JsonVariant m : messages) {
+        Serial.println();
+        Serial.print("New message from chatId: ");
+        Serial.print(u["chat"].as<String>());
+        Serial.print(" Message: ");
+        Serial.println(m["content"].as<String>());
+        String msg = "{\"message\":{\"text\":\"" + m["content"].as<String>() + "\"},\"chat_id\":\"" + u["chat"].as<String>() + "\"}";
+        client.send(msg);
+      }
+    }
 }
 
+
+
+
+void onEventsCallback(WebsocketsEvent event, String data) {
+    if(event == WebsocketsEvent::ConnectionOpened) {
+        Serial.println("Connnection Opened");
+    } else if(event == WebsocketsEvent::ConnectionClosed) {
+        Serial.println("Connnection Closed");
+    } else if(event == WebsocketsEvent::GotPing) {
+        Serial.println("Got a Ping!");
+    } else if(event == WebsocketsEvent::GotPong) {
+        Serial.println("Got a Pong!");
+    }
+}
+
+
+void setupWebsocket() {
+    client = {}; // as advised in issue #75 
+//    client = WebsocketsClient();
+    client.onMessage(onMessageCallback);
+    client.onEvent(onEventsCallback);
+//    client.setInsecure(); // yes, lame
+    Serial.println("Connecting to ws");
+    client.connect(websockets_server);
+}
 
 void setup() {
+    Serial.begin(115200);
+    // Connect to wifi
+    Serial.print("Connecting");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("Connected to wifi!");
 
-  Serial.begin(115200);
-  delay(3000);
-  
-  // attempt to connect to Wifi network:
-  Serial.print("Connecting Wifi: ");
-  Serial.println(ssid);
-  while (WiFi.begin(ssid, password) != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  IPAddress ip = WiFi.localIP();
-  Serial.println(ip);
-
-  bot.begin();      // launch Bot functionalities
+    // Wait some time to connect to wifi
+    for(int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; i++) {
+        Serial.print(".");
+        delay(1000);
+    }
+    setupWebsocket();
 }
-
-
 
 void loop() {
-
-  if (millis() > Bot_lasttime + Bot_mtbs)  {
-    bot.getUpdates(bot.message[0][1]);   // launch API GetUpdates up to xxx message
-    Bot_EchoMessages();   // reply to message with Echo
-    Bot_lasttime = millis();
-  }
+    if (client.available()) {
+      client.poll();
+    } else {
+      Serial.println("not available...");
+      delay(5000);
+      setupWebsocket();
+    }
 }
-
-
-
-
