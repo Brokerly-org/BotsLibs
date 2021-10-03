@@ -65,7 +65,16 @@ def handler(context, update):
         context.send_message(chat_id, help_text)
 
 
+def callback_handler(context, callback_data: dict):
+    print(callback_data)
+
+
 bot = Bot(
-    token="pq-eQv9ECM7gyUXwKDFr", message_handler=handler, host="dashboard.brokerly.tk"
+    token="uk8hZhoWcR1pOQW-3e99",
+    message_handler=handler,
+    callback_handler=callback_handler,
+    host="127.0.0.1",
+    port=9981,
+    secure=False,
 )
-bot.start(interval=1)
+bot.start()

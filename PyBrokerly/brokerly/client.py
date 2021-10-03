@@ -27,11 +27,13 @@ class Bot:
         self,
         token: str,
         message_handler,
+        callback_handler,
         host: str,
         port: int = None,
         workers: int = 4,
         secure: bool = True,
     ):
+        self._run = True
         self.token = token
         self.schema = "https://" if secure else "http://"
         if port is not None:
@@ -46,6 +48,7 @@ class Bot:
         )
         self.connection.start()
         self.handler = message_handler
+        self.callback_handler = callback_handler
         self.executor = ThreadPoolExecutor(max_workers=workers)
 
     def send_message(self, chat_id, message, widget: Widget = None) -> None:
@@ -66,6 +69,12 @@ class Bot:
         except Exception as EX:
             print(EX)
 
+    def _run_callback_handler(self, callback_data: dict):
+        try:
+            self.callback_handler(self, callback_data)
+        except Exception as EX:
+            print(EX)
+
     def _get_updates(self):
         response = requests.get(
             f"{self.server_url}/bot/pull", params={"token": self.token}
@@ -73,8 +82,11 @@ class Bot:
         return response.json()
 
     def pares_update(self, update):
-        updates = json_lib.loads(update)
-        for update in updates:
+        data = json_lib.loads(update)
+        if "data" in data:
+            self.executor.submit(self._run_callback_handler, data)
+            return
+        for update in data:
             self.execute_update(update)
 
     def execute_update(self, update):
@@ -82,13 +94,16 @@ class Bot:
             message = Message({"message": message})
             self.executor.submit(self._run_handler, message)
 
-    def start(self, interval=5):
-        self.idle()
+    def start(self, interval=1):
+        self.idle(close_interval=interval)
 
-    def idle(self):
-        while True:
+    def idle(self, close_interval: int):
+        while self._run:
             try:
-                time.sleep(0.5)
+                time.sleep(close_interval)
             except KeyboardInterrupt:
                 break
         self.connection.stop()
+
+    def stop(self):
+        self._run = False

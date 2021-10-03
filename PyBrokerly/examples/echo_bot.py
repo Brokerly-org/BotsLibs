@@ -8,7 +8,11 @@ def handler(context, update):
     context.send_message(chat_id, text)
 
 
+def callback_handler(context, callback_data):
+    print(callback_data)
+
+
 bot = Bot(
-    token="pq-eQv9ECM7gyUXwKDFr", message_handler=handler, host="dashboard.brokerly.tk"
+    token="nn1FpnNpLcUqEufHn-xJ", message_handler=handler, callback_handler=callback_handler, host="yakov.gq",
 )
-bot.start(interval=1)
+bot.start()
